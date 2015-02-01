@@ -4,7 +4,7 @@ import Data.Default (Default(..))
 import Graphics.UI.Gtk
 
 import System.TellMe.Monitor
-import System.TellMe.Schedule
+import System.TellMe.Monitor.Clock
 
 data Position = Top | Bottom
   deriving (Show, Eq)
@@ -14,8 +14,8 @@ data Config = Config { screenNumber :: Int
                      , barHeight :: Int
                      , barPosition :: Position
                      , widgetSpacing :: Int
-                     , startMonitors :: [Monitor]
-                     , endMonitors :: [Monitor]
+                     , startWidgets :: [Widget]
+                     , endWidgets :: [Widget]
                      }
 
 instance Default Config where
@@ -24,8 +24,8 @@ instance Default Config where
                , barHeight = 25
                , barPosition = Bottom
                , widgetSpacing = 10
-               , startMonitors = []
-               , endMonitors = []
+               , startWidgets = []
+               , endWidgets = []
                }
 
 setSize :: Config -> Window -> IO ()
@@ -44,23 +44,6 @@ setSize cfg window = do
                          Nothing
                          Nothing
 
--- installMonitors cfg box = do
---   mapM_ (add boxPackStart) $ startMonitors cfg
---   mapM_ (add boxPackEnd) $ endMonitors cfg
---   queue <- newIORef [(0, action) | Monitor action _ <- startMonitors cfg ++ endMonitors cfg]
---   let loop = do
---        q <- readIORef queue
-
-       
-           
---   bleh <- mapM (\a -> a >>= \i -> (i, a)) actions
---     where
---       h = barHeight cfg
---       add method (Monitor action widget) = do
---         widgetSetSizeRequest widget (-1) h
---         method box widget PackNatural 0
-
-
 tellme :: Config -> IO ()
 tellme cfg = do
   initGUI
@@ -74,9 +57,16 @@ tellme cfg = do
   on screen screenMonitorsChanged $ setSize cfg window
   box <- hBoxNew False $ widgetSpacing cfg
   containerAdd window box
-  -- (loop, nextTime) <- installMonitors cfg box
-  -- timeoutAdd loop nextTime
+  mapM_ (add box boxPackStart) $ startWidgets cfg
+  mapM_ (add box boxPackEnd) $ endWidgets cfg
   widgetShowAll window
   mainGUI
+  where
+    h = barHeight cfg
+    add box method widget = do
+      widgetSetSizeRequest widget (-1) h
+      method box widget PackNatural 0
 
-main = tellme def
+main = do
+  c <- clock "%c"
+  tellme $ def { startWidgets = [c] }
