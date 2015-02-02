@@ -18,6 +18,7 @@ cabal-version:       >=1.10
 executable tellme
   main-is:             Main.hs
   build-depends:       base >=4.7 && <4.8,
+                       cairo,
                        data-default,
                        old-locale,
                        gtk,

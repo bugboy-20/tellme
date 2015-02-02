@@ -1,5 +1,7 @@
 module Main where
 
+import Control.Monad
+import qualified Control.Monad.State as S
 import Data.Default (Default(..))
 import Graphics.UI.Gtk
 
@@ -67,6 +69,14 @@ tellme cfg = do
       widgetSetSizeRequest widget (-1) h
       method box widget PackNatural 0
 
+f = do
+  x <- S.get
+  let x' = x + 0.05
+      x'' = if x' >= 1 then x' - 1 else x'
+  S.put x''
+  return x
+
 main = do
-  c <- clock "%c"
-  tellme $ def { startWidgets = [c] }
+  c1 <- labelled "clock1: " =<< clock "%c"
+  c2 <- labelled "clock2: " =<< monitorBar 100 0 f
+  tellme $ def { startWidgets = [c1, c2] }
