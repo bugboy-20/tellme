@@ -3,14 +3,17 @@ module System.TellMe.Monitor.Clock where
 import Graphics.UI.Gtk (Widget)
 import Data.Time.Clock (UTCTime, getCurrentTime)
 import Data.Time.Format (formatTime)
-import Data.Time.LocalTime (getCurrentTimeZone, utcToLocalTime)
+import Data.Time.LocalTime (LocalTime, getCurrentTimeZone, utcToLocalTime)
 import System.Locale (defaultTimeLocale)
 import System.TellMe.Monitor
 
-clock :: String -> IO Widget
-clock format = do
+clock :: IO LocalTime
+clock = do
   tz <- getCurrentTimeZone
-  monitorLabel' 1000 $ do
-    now <- getCurrentTime
-    let local = utcToLocalTime tz now
-    return $ formatTime defaultTimeLocale format local
+  now <- getCurrentTime
+  return $ utcToLocalTime tz now
+
+clockWidget :: String -> IO Widget
+clockWidget format = periodic_ 1000 clock m
+  where
+    m = formatTime defaultTimeLocale format >$< mkText

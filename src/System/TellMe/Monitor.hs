@@ -1,63 +1,98 @@
+{-# LANGUAGE TupleSections #-}
+
 module System.TellMe.Monitor where
 
 import Control.Monad (void)
-import Control.Monad.State (StateT, execStateT, liftIO)
+import Control.Monad.State (StateT, runStateT, liftIO)
 import Data.IORef (newIORef, readIORef, writeIORef)
 import qualified Graphics.Rendering.Cairo as C
-import Graphics.UI.Gtk --(Widget, labelNew, labelSetText, timeoutAdd, toWidget)
+import Graphics.UI.Gtk
+import Text.Printf (printf)
 
 type Timeout = Int
 
-periodic :: Timeout -> IO () -> IO ()
-periodic ms action = void $ timeoutAdd (action >> return True) ms
+data Monitor a = M (IO (Widget, a -> IO ()))
 
-stateful :: Timeout -> s -> StateT s IO () -> IO ()
-stateful ms start action = do
+class ContraFunctor m where
+  (>$<) :: (a -> b) -> m b -> m a
+
+infixr 8 >$<
+
+class ContraApplicative m where
+  empty :: m a
+  (>*<) :: m a -> m b -> m (a, b)
+
+infixr 8 >*<
+
+instance ContraFunctor Monitor where
+  f >$< (M m) = M $ do
+    (w, fill) <- m
+    return $ (w, fill . f)
+
+instance ContraApplicative Monitor where
+  empty = M $ do
+    box <- hBoxNew False 0
+    return (toWidget box, return . const ())
+  (M m1) >*< (M m2) = M $ do
+    (w1, fill1) <- m1
+    (w2, fill2) <- m2
+    box <- hBoxNew False 1
+    boxPackStart box w1 PackNatural 0
+    boxPackStart box w2 PackNatural 0
+    let fill (v1, v2) = fill1 v1 >> fill2 v2
+    return $ (toWidget box, fill)
+
+mkText :: Monitor String
+mkText = M $ do
+  label <- labelNew (Nothing :: Maybe String)
+  return (toWidget label, labelSetText label)
+
+mkBar :: Int -> Monitor Double
+mkBar width = M $ do
+  drawArea <- drawingAreaNew
+  widgetSetSizeRequest drawArea width (-1)
+  let fill v = do
+        (w, h) <- widgetGetSize drawArea
+        let w' = fromIntegral w
+            h' = fromIntegral h
+        win <- widgetGetDrawWindow drawArea
+        renderWithDrawable win $ do
+          C.setSourceRGB 0.5 0.3 0.3
+          C.rectangle 0 0 w' h'
+          C.fill
+          C.setSourceRGB 0 0 0
+          C.rectangle 0 (v * h') w' h'
+          C.fill
+  return $ (toWidget drawArea, fill)
+
+mkPercent :: Monitor Double
+mkPercent = split . clamp >$< mkBar 10 >*< mkText
+  where
+    split x = (x, printf "%3.0f%%" $ 100 * x)
+    clamp x | x < 0 = 0
+            | x > 1 = 1
+            | otherwise = x
+
+labelled :: String -> Monitor a -> Monitor a
+labelled s m = (s, ) >$< mkText >*< m
+
+periodic :: Timeout -> s -> StateT s IO a -> Monitor a -> IO Widget
+periodic ms start gen (M m) = do
+  (widget, fill) <- m
   ref <- newIORef start
   let callback = do
         state <- readIORef ref
-        state' <- execStateT action state
+        (v, state') <- runStateT gen state
         writeIORef ref state'
+        fill v
         return True
   void $ timeoutAdd callback ms
+  return widget
 
-labelled :: String -> Widget -> IO Widget
-labelled text widget = do
-  box <- hBoxNew False 1
-  label <- labelNew $ Just text
-  boxPackStart box label PackNatural 0
-  boxPackStart box widget PackNatural 0
-  return $ toWidget box
+periodic_ :: Timeout -> IO a -> Monitor a -> IO Widget
+periodic_ ms gen = periodic ms () (liftIO gen)
 
-monitorLabel :: Timeout -> s -> StateT s IO String -> IO Widget
-monitorLabel ms start gen = do
-  widget <- labelNew (Nothing :: Maybe String)
-  stateful ms start $ do
-    text <- gen
-    liftIO $ labelSetText widget text
-  return $ toWidget widget
+--triggered :: FD -> s -> StateT s IO a -> Monitor a -> IO Widget
 
-monitorLabel' :: Timeout -> IO String -> IO Widget
-monitorLabel' ms = monitorLabel ms () . liftIO
-
-monitorBar :: Timeout -> s -> StateT s IO Double -> IO Widget
-monitorBar ms start gen = do
-  widget <- drawingAreaNew
-  widgetSetSizeRequest widget 30 (-1)
-  stateful ms start $ do
-    (w, h) <- liftIO $ widgetGetSize widget
-    let w' = fromIntegral w
-        h' = fromIntegral h
-    win <- liftIO $ widgetGetDrawWindow widget
-    pct <- gen
-    liftIO $ renderWithDrawable win $ do
-      C.setSourceRGB 0.5 0.3 0.3
-      C.rectangle 0 0 w' h'
-      C.fill
-      C.setSourceRGB 0 0 0
-      C.rectangle 0 0 w' (pct * h')
-      C.fill
-  return $ toWidget widget
-
-monitorBar' :: Timeout -> IO Double -> IO Widget
-monitorBar' ms = monitorBar ms () . liftIO
+-- battery :: IO Double
+-- batteryWidget = periodic_ 1000 battery $ labelled "Bat" mkPercent
