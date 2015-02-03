@@ -1,7 +1,7 @@
 module System.TellMe.Monitor.Clock where
 
 import Graphics.UI.Gtk (Widget)
-import Data.Time.Clock (UTCTime, getCurrentTime)
+import Data.Time.Clock (getCurrentTime)
 import Data.Time.Format (formatTime)
 import Data.Time.LocalTime (LocalTime, getCurrentTimeZone, utcToLocalTime)
 import System.Locale (defaultTimeLocale)
