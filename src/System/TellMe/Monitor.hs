@@ -27,7 +27,7 @@ infixr 8 >*<
 instance ContraFunctor Monitor where
   f >$< (M m) = M $ do
     (w, fill) <- m
-    return $ (w, fill . f)
+    return (w, fill . f)
 
 instance ContraApplicative Monitor where
   empty = M $ do
@@ -40,7 +40,7 @@ instance ContraApplicative Monitor where
     boxPackStart box w1 PackNatural 0
     boxPackStart box w2 PackNatural 0
     let fill (v1, v2) = fill1 v1 >> fill2 v2
-    return $ (toWidget box, fill)
+    return (toWidget box, fill)
 
 mkText :: Monitor String
 mkText = M $ do
@@ -63,7 +63,7 @@ mkBar width = M $ do
           C.setSourceRGB 0 0 0
           C.rectangle 0 (v * h') w' h'
           C.fill
-  return $ (toWidget drawArea, fill)
+  return (toWidget drawArea, fill)
 
 mkPercent :: Monitor Double
 mkPercent = split . clamp >$< mkBar 10 >*< mkText

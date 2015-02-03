@@ -44,7 +44,7 @@ setSize cfg window = do
 
 tellme :: Config -> IO ()
 tellme cfg = do
-  void $ initGUI
+  void initGUI
   Just disp <- displayGetDefault
   screen <- displayGetScreen disp $ screenNumber cfg
   window <- windowNew
