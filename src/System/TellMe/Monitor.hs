@@ -93,6 +93,3 @@ periodic_ :: Timeout -> IO a -> Monitor a -> IO Widget
 periodic_ ms gen = periodic ms () (liftIO gen)
 
 --triggered :: FD -> s -> StateT s IO a -> Monitor a -> IO Widget
-
--- battery :: IO Double
--- batteryWidget = periodic_ 1000 battery $ labelled "Bat" mkPercent
