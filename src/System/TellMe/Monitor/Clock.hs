@@ -14,6 +14,6 @@ tick = do
   return $ utcToLocalTime tz now
 
 clockWidget :: String -> IO Widget
-clockWidget format = periodic_ 1000 tick m
+clockWidget format = periodic_ 1000 tick --> m
   where
     m = formatTime defaultTimeLocale format >$< mkText

@@ -15,6 +15,6 @@ acpiB = do
   return $ B (fromIntegral pct / 100) time
 
 batteryWidget :: IO Widget
-batteryWidget = periodic_ 2000 acpiB m
+batteryWidget = periodic_ 2000 acpiB --> tag "Bat: " m
   where
-    m = (\(B f s) -> (f, s)) >$< mkPercent >*< mkText
+    m = (\(B f s) -> (f, s)) >$< mkPercent >!< mkText
