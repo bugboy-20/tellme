@@ -6,14 +6,18 @@ import System.TellMe
 import System.TellMe.Monitor.ACPI
 import System.TellMe.Hw
 import System.TellMe.Monitor.Workspaces
+import System.TellMe.Monitor.PulseAudio
+
 -- import System.TellMe.Monitor.Clock
 
 main :: IO ()
 main = do
 --  w1 <- clockWidget "%c"
--- w2 <- batteryWidget
+  w2 <- batteryWidget
   hw <- helloWord
-  ws <- workspaces
-  tellme $ def { startWidgets = [ws,hw]
+  v <- pulseAdioWidget 
+  --ws <- workspaces
+  tellme $ def { startWidgets = [v]
+               , endWidgets = [w2]
                , barPosition = Top
                }

@@ -26,12 +26,14 @@ executable tellme
                        process,
                        time,
                        unix
+
   hs-source-dirs:      src
   other-modules:
         System.TellMe,
         System.TellMe.Monitor,
         System.TellMe.Monitor.ACPI,
-        System.TellMe.Monitor.Clock
-        System.TellMe.Monitor.Workspaces
+        System.TellMe.Monitor.Clock,
+        System.TellMe.Monitor.Workspaces,
+        System.TellMe.Monitor.PulseAudio,
         System.TellMe.Hw
   default-language:    Haskell2010
