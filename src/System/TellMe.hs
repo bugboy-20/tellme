@@ -59,6 +59,6 @@ tellme cfg = do
         widgetSetSizeRequest widget (-1) $ barHeight cfg
         method box widget PackNatural 0
   mapM_ (addWidgets boxPackStart) $ startWidgets cfg
-  mapM_ (addWidgets boxPackEnd) $ endWidgets cfg
+  mapM_ (addWidgets boxPackEnd) $ reverse . endWidgets $ cfg
   widgetShowAll window
   mainGUI
