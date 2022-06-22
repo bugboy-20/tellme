@@ -8,6 +8,7 @@ import System.TellMe.Hw
 import System.TellMe.Monitor.Workspaces
 import System.TellMe.Monitor.PulseAudio
 import System.TellMe.Monitor.Clock
+import System.TellMe.Monitor.Custom
 
 -- import System.TellMe.Monitor.Clock
 
@@ -17,8 +18,9 @@ main = do
   w2 <- batteryWidget
   hw <- helloWord
   v <- pulseAdioWidget 
+  c <- custom "echo" ["ciao"] 100
   --ws <- workspaces
-  tellme $ def { startWidgets = [v]
-               , endWidgets = [w2,w1]
+  tellme $ def { startWidgets = [v,hw]
+               , endWidgets = [c,w2,w1]
                , barPosition = Top
                }
