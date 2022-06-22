@@ -12,10 +12,11 @@ acpiB = do
   line <- readProcess "acpi" [] ""
   let parts = words line
       --pct = read $ init $ last parts :: Integer
-      pct = 50
       --pct = read $ init $ init $ parts !! 3 :: Integer
       -- time = parts !! 4
+      -- TODO, need to read pow consumpion an other things... 
       time = "55:3"
+  pct <- read <$> readFile "/sys/class/power_supply/BAT0/capacity"
   return $ B (fromIntegral pct / 100) time
 
 batteryWidget :: IO Widget

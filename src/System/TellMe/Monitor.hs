@@ -87,7 +87,7 @@ instance Concurrent Monitor where
   dup mon = M $ do
     (w, sink) <- runMonitor mon
     let sink' (a, b) = sink (Left a) >> sink (Right b)
-    return $ (w, sink')
+    return (w, sink')
 
 mkText :: Monitor String
 mkText = M $ do
@@ -125,6 +125,7 @@ tag s mon = M $ do
   (w, sink) <- runMonitor $ mkText >*< mon
   sink (Left s)
   return (w, sink . Right)
+
 
 -- triggered :: FD -> s -> StateT s IO a -> Monitor a -> IO Widget
 -- triggered fd start gen (M m) = do

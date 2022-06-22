@@ -11,7 +11,7 @@ newtype Audio = A RampVolume
 
 
 pulseAdioWidget :: IO Widget
-pulseAdioWidget = periodic_ 2000 defaultSink --> m
+pulseAdioWidget = periodic_ 2000 defaultSink --> tag "Volume: " m
   where
     m = (\(A v) -> v) >$< mkText
 
